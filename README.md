@@ -9,3 +9,5 @@ The crawl is highly customizable: there are separate files for background and se
 Displayed texts may be readed come from a local file or web service as well. The template reads whole text package, displays them all, and then, just before new iteration is started, reads new content. If the content source begins with `http`, a anticache parameter is added to url line.
 
 The template is also able to display clock.
+
+Template contains only one - [Lato](http://www.latofonts.com/lato-free-fonts) - font embedded. Not embedded fonts have much lower rendering quality, so the only option is add them to /assets folder, [Main.as](jaskie/TVPlayCasparCgTemplates/blob/master/SimpleCrawl/src/Main.as) and recompile.
