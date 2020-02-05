@@ -48,11 +48,14 @@ package
 	public class Main extends CasparTemplate
 	{		
 		//Embed the fonts, important to set the embedAsCFF to false!
+		
 		/*
 		[Embed(source="../assets/ARIALBD.TTF", fontFamily="Arial", fontWeight = FontWeight.BOLD, fontStyle="regular", embedAsCFF = "false")]
 		private var _fontArialBold:Class;
 		[Embed(source="../assets/ARIAL.TTF", fontFamily="Arial", fontWeight = FontWeight.NORMAL, fontStyle="regular", embedAsCFF = "false")]
 		private var _fontArial:Class;
+		*/
+		/*
 		[Embed(source="../assets/ARIALBI.TTF", fontFamily="Arial", fontWeight = FontWeight.BOLD, fontStyle="italic", embedAsCFF = "false")]
 		private var _fontArialBoldItalic:Class;
 		[Embed(source="../assets/ARIALI.TTF", fontFamily="Arial", fontWeight = FontWeight.NORMAL, fontStyle="italic", embedAsCFF = "false")]
@@ -92,6 +95,16 @@ package
 		private var contentUrl:String;
 		private var nullInputTimer:Timer = new Timer(10000); // when there is no input data, check for data every 10s
 		
+		private var fontLoaded: Boolean;
+		private var backgroundLoaded: Boolean;
+		private var clockBackgroundLoaded: Boolean;
+		private var separatorLoaded: Boolean;
+		private var stageReady: Boolean;
+			
+		private var font:Font;
+		
+		private var text:String;
+		
 		private static const TWEEN_DURATION:Number = 0.5;
 		private static const TIME_TO_PRELOAD_CONTENT:Number = 3000;
 		
@@ -107,7 +120,8 @@ package
 				 <template version="1.0.0" authorName="Jerzy Jaśkiewicz" authorEmail="jurek@tvp.pl" templateInfo="Generic crawl CasparCG template" originalWidth="1920" originalHeight="1080" originalFrameRate="50" >
 				 	<components>
 					</components>
-					<keyframes></keyframes>
+					<keyframes>
+					</keyframes>
 					<parameters>
 					</parameters>
 				</template>			
@@ -116,19 +130,42 @@ package
 				graphics.beginFill(0x808080, 1);
 				graphics.drawRect(0, 0, originalWidth, originalHeight);
 				graphics.endFill();
+				SetData(new XML(
+				<templateData>
+				<!--
+					<componentData id="config">
+						<data id="text" value="simplecrawl.config"></data> 
+					</componentData>
+					<componentData id="text">
+						<data id="text" value="A text to show in debug mode"></data> 
+					</componentData>
+				-->
+					<componentData id="repeat">
+						<data id="text" value="2"></data> 
+					</componentData>
+				</templateData>
+				));
 			}
-			loadConfig("simplecrawl.config");			
 
 			TraceToLog("Main class initialized successfully");
 		}
 		
-		private var fontLoaded: Boolean;
-		private var backgroundLoaded: Boolean;
-		private var clockBackgroundLoaded: Boolean;
-		private var separatorLoaded: Boolean;
-		private var stageReady: Boolean;
+		public override function SetData(xmlData:XML) : void {
+
+			var configFileName:String = "simplecrawl.config";
+			
+			for each (var element:XML in xmlData.children()) {
+				//seems to be our data
+				if (element.@id == "config" && element.data.@value != "") 		
+					configFileName = element.data.@value;
+				if (element.@id == "text" && element.data.@value != "")
+					text = element.data.@value;
+				if (element.@id == "repeat" && element.data.@value)
+					repeatLeft = element.data.@value;
+			}
+			loadConfig(configFileName);
+		}		
 		
-		private var font:Font;
 		
 		private function loadConfig(configURL:String):void {
 			TraceToLog("Config file about to load.");
@@ -158,6 +195,8 @@ package
 				fontFilters.push(new GlowFilter(config.font.glow.@color, config.font.glow.@alpha, config.font.glow.@blur, config.font.glow.@blur, config.font.glow.@strength));
 			if (config.font.dropShadow)
 				fontFilters.push(new DropShadowFilter(config.font.dropShadow.@distance, config.font.dropShadow.@angle, config.font.dropShadow.@color, config.font.dropShadow.@alpha, config.font.dropShadow.@blur, config.font.dropShadow.@blur, config.font.dropShadow.@strength)); 
+			if (!fontFilters[0])
+				fontFilters.push(new GlowFilter(alpha = 0));
 			clock = null;
 			var clockConfig:XMLList = config.clock;
 			if (clockConfig)
@@ -179,10 +218,8 @@ package
 				}
 			}
 			var repeatCount:int = config.repeat;
-			if (repeatCount > 0)
+			if (repeatLeft == int.MAX_VALUE && repeatCount > 0)
 				repeatLeft = repeatCount;
-			else
-				repeatLeft = int.MAX_VALUE;
 				
 			if (config.font){
 				scroller = new Scroller(config.font.@width, config.font.@speed);
@@ -265,8 +302,7 @@ package
 				separatorLoaded = true;
 				setupStage();
 			}
-		}
-		
+		}		
 		
 		private function setupStage():void
 		{
@@ -295,6 +331,13 @@ package
 				)
 				return;
 			repeatLeft -= 1;
+			
+			if (text != null)
+			{
+				if (LoadElements(text))
+					StartCrawl();
+			}
+			else
 			if (contentUrl)
 			{
 				var loader:URLLoader = contentUrl.indexOf("http") > 0 
@@ -322,20 +365,11 @@ package
 					TraceToLog("Scroller not found after loading content");
 					return;
 				}
-				var content:Array = loader.data.split("\n"); 
-				var containsElement:Boolean = false;
-				if (content)
-					for each (var value:String in content)
-					{
-						var text:String = StringUtil.trim(value);
-						if (value != "")
-						{
-							scroller.addElement(new Bitmap(separator.bitmapData), false, true);
-							scroller.addElement(new CrawlElement(value, textFormat, fontFilters));
-							containsElement = true;
-						}
-					}
+				
+				var containsElement:Boolean = LoadElements(loader.data);
+
 				loader.close();
+
 				if (containsElement == false)
 				{ 
 					nullInputTimer.start();	
@@ -344,13 +378,30 @@ package
 				else
 				{
 				if (!scroller.getIsRunning())
-					{
-						StartCrawl();
-						scroller.start();
-						scroller.addEventListener(Scroller.LAST_OFF_SCREEN, scrollerLAST_OFF_SCREEN);
-					}
+					StartCrawl();
 				}
 			}
+		}
+		
+		private function LoadElements(data:String):Boolean
+		{
+			if (!data)
+				return false;
+			var content:Array = data.split("\n"); 
+			if (!content)
+				return false;
+			var result:Boolean = false;
+			for each (var value:String in content)
+				{
+					var text:String = StringUtil.trim(value);
+					if (value != "")
+					{
+						scroller.addElement(new Bitmap(separator.bitmapData), false, true);
+						scroller.addElement(new CrawlElement(value, textFormat, fontFilters));
+						result = true;
+					}
+				}
+			return result;
 		}
 			
 		private function StartCrawl():void 
@@ -367,6 +418,8 @@ package
 										loadTextContent(null);				
 								}, [], TIME_TO_PRELOAD_CONTENT); // three seconds before finish
 							}
+						scroller.start();
+						scroller.addEventListener(Scroller.LAST_OFF_SCREEN, scrollerLAST_OFF_SCREEN);
 						TraceToLog("StartCrawl executed");
 					} 
 				} 
@@ -385,8 +438,9 @@ package
 			);
 		}
 		
-		private function scrollerLAST_OFF_SCREEN(e:Event):void
+		private function scrollerLAST_OFF_SCREEN(event:Event):void
 		{
+			event.currentTarget.removeEventListener(event.type, arguments.callee);
 			StopCrawl();
 		}
 		
