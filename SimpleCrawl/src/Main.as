@@ -83,7 +83,7 @@ package
 		private var _fontLatoBold:Class;
 
 		private var crawlStage:Sprite = new Sprite();
-		private var clock:Clock; 
+		private var clocks:Array; 
 		private var scroller:Scroller;
 		private var background:Bitmap;
 		private var clockBackground:Bitmap;
@@ -197,7 +197,7 @@ package
 				fontFilters.push(new DropShadowFilter(config.font.dropShadow.@distance, config.font.dropShadow.@angle, config.font.dropShadow.@color, config.font.dropShadow.@alpha, config.font.dropShadow.@blur, config.font.dropShadow.@blur, config.font.dropShadow.@strength)); 
 			if (!fontFilters[0])
 				fontFilters.push(new GlowFilter(alpha = 0));
-			clock = null;
+			clocks = new Array();
 			var clockConfig:XMLList = config.clock;
 			if (clockConfig)
 			{
@@ -211,9 +211,10 @@ package
 					if (clockXml.font.dropShadow)
 						clockFontFilters.push(new DropShadowFilter(clockXml.font.dropShadow.@distance, clockXml.font.dropShadow.@angle, clockXml.font.dropShadow.@color, clockXml.font.dropShadow.@alpha, clockXml.font.dropShadow.@blur, clockXml.font.dropShadow.@blur, clockXml.font.dropShadow.@strength)); 
 					var clockBackgroundFilter:ColorMatrixFilter = null;
-					clock = new Clock(clockXml.@timeFormat, clockTextFormat, clockFontFilters, 1);
+					var clock:Clock = new Clock(clockXml.@timeFormat, clockTextFormat, clockFontFilters, 1);
 					clock.x = clockXml.@left;
 					clock.y = clockXml.@top;
+					clocks.push(clock);
 					loadClockBackground(clockXml.background.@url, config.background.@left, config.background.@top);
 				}
 			}
@@ -306,17 +307,18 @@ package
 		
 		private function setupStage():void
 		{
-			if (backgroundLoaded == true && separatorLoaded == true && (clock == null || clockBackgroundLoaded))
+			if (backgroundLoaded == true && separatorLoaded == true && (clocks.length == 0|| clockBackgroundLoaded))
 			{
 				if (background)
 					crawlStage.addChild(background);
 				if (scroller)
 					crawlStage.addChild(scroller);
-				if (clock) {
+				if (clocks.length > 0) {
 					if (clockBackground) {
 						crawlStage.addChild(clockBackground);
 					}
-					crawlStage.addChild(clock);
+					for each (var clock:Clock in clocks)
+						crawlStage.addChild(clock);
 				}
 				stageReady = true;
 				loadTextContent(null);
