@@ -55,10 +55,16 @@ package
 		[Embed(source="../assets/Lato-Bold.ttf", fontFamily="Lato", fontWeight = FontWeight.BOLD, fontStyle="regular", embedAsCFF = "false")]
 		private var _fontLatoBold:Class;
 
+		[Embed(source="../assets/TVPR-Normal.ttf", fontFamily="TVP", fontWeight = FontWeight.NORMAL, fontStyle="regular", embedAsCFF = "false")]
+		private var _fontTvpMedium:Class;
+		[Embed(source="../assets/TVPB-Bold.ttf", fontFamily="TVP", fontWeight = FontWeight.BOLD, fontStyle="regular", embedAsCFF = "false")]
+		private var _fontTvpBold:Class;
+
 		private const positionX:Number = 900; // counting from right side, in 1024 px scale
 		private const positionY:Number = 60; //from top
 		
-		private var next:Ticker;
+		private var first:Ticker;
+		private var second:Ticker;
 		
 		public function Main():void 
 		{
@@ -82,34 +88,43 @@ package
 				graphics.endFill();
 				SetData(new XML(
 				<templateData>
-					<componentData id="next">
+					<componentData id="first">
 						<data id="text" value="KRONIKA"></data> 
+					</componentData>
+					<componentData id="second">
+						<data id="text" value="WOKÓŁ NAS"></data> 
 					</componentData>
 				</templateData>
 				));
-				TweenLite.to(this, 1, { onComplete: Play});
+				TweenLite.to(new Object(), 1, { onComplete: Play});
 			}
 			TraceToLog("Main class initialized successfully");
 		}
 		
 		public override function SetData(xmlData:XML) : void {
 			for each (var element:XML in xmlData.children()) {
-				if (element.@id == "next" && element.data.@value != "")
+				if (element.@id == "first" && element.data.@value != "")
 				{
-					next = new Ticker("ZA CHWILĘ", element.data.@value);
-					next.x = positionX - next.width;
-					next.y = positionY;
+					first = new Ticker("ZA CHWILĘ", element.data.@value);
+					first.x = positionX - first.width;
+					first.y = positionY;
+				}
+				if (element.@id == "second" && element.data.@value != "")
+				{
+					second = new Ticker("NASTĘPNIE", element.data.@value);
+					second.x = positionX - second.width;
+					second.y = positionY;
 				}
 			}
 		}
 		
 		override public function Play():void 
 		{
-			if (next)
+			if (first)
 			{
-				addChild(next);
-				next.addEventListener(Ticker.FINISHED, TickerFinished);
-				next.Show();
+				addChild(first);
+				first.addEventListener(Ticker.FINISHED, TickerFinished);
+				first.Show();
 			}
 		}	
 		
@@ -126,14 +141,23 @@ package
 				break;
 			}
 		}
+		
+		private function PlaySecond():void
+		{
+			addChild(second);
+			second.addEventListener(Ticker.FINISHED, TickerFinished);
+			second.Show();
+		}
 
 		private function Hide():void
 		{
-			if (next)
+			if (first || second)
 			{
-				next.Hide();
-				next = null;
-			}
+				first.Hide();
+				first = null;
+				second.Hide();
+				second = null;
+			}			
 			else
 				Exit();
 		}
@@ -141,9 +165,16 @@ package
 		private function TickerFinished(event:Event):void
 		{
 			event.currentTarget.removeEventListener(event.type, arguments.callee);
-			Exit();
-			
-		}
+			if (first)
+			{
+				removeChild(first);
+				first = null;
+				if (second)
+					TweenLite.to(new Object(), 2.0, { onComplete: PlaySecond });
+			}
+			else
+				Exit();			
+		}		
 		
 		private function Exit():void
 		{

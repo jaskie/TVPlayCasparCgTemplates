@@ -19,10 +19,10 @@ package
 		public static const FINISHED:String = "Finished";
 
 		private const textDissolveTime:Number = 0.2;
-		private const animationTime:Number = 1.0;
+		private const animationTime:Number = 0.7;
+		private const displayTime:Number = 3.0;
 		private const textMargin:Number = 10;
 
-		private var background:Sprite = new Sprite();
 		private var textLayer:Sprite = new Sprite();
 		private var whiteRect:Shape = new Shape();
 		private var darkBlueRect:Shape = new Shape();
@@ -42,28 +42,39 @@ package
 			textLayer.alpha = 0;
 			fullWidth = textLayer.width + 4 * textMargin;
 
-			lightBlueRect.graphics.beginFill(0x1010F0);
+			lightBlueRect.graphics.beginFill(0x2272e1);
 			lightBlueRect.graphics.drawRect(0, 0, fullWidth, textLayer.height);
 			lightBlueRect.graphics.endFill();
 			lightBlueRect.width = 0;
+
+			darkBlueRect.graphics.beginFill(0x1b579d);
+			darkBlueRect.graphics.drawRect(0, 0, fullWidth, textLayer.height);
+			darkBlueRect.graphics.endFill();
+			darkBlueRect.width = 0;
 						
 			whiteRect.graphics.beginFill(0xF0F0F0);
 			whiteRect.graphics.drawRect(0, 0, fullWidth, textLayer.height);
 			whiteRect.graphics.endFill();
 			whiteRect.width = 0;
+
+			addChild(lightBlueRect);
+			addChild(darkBlueRect);
+			addChild(whiteRect);
+			addChild(textLayer);
 			
-			background.addChild(lightBlueRect);
-			background.addChild(whiteRect);
-			background.addChild(textLayer);
-			
-			addChild(background);
 			super();
 		}
 		
 		public function Show():void
 		{
-			TweenLite.to(lightBlueRect, animationTime* 0.7, { width: fullWidth, ease:Linear.easeIn } );
-			TweenLite.to(this, animationTime * 0.1, {onComplete: function():void {
+			TweenLite.to(lightBlueRect, animationTime * 0.5, { width: fullWidth, ease:Linear.easeIn } );
+			
+			TweenLite.to(new Object(), animationTime * 0.05, { onComplete: function():void // delay
+			{
+				TweenLite.to(darkBlueRect, animationTime * 0.5, { width: fullWidth, ease:Linear.easeIn } );
+			}});
+			
+			TweenLite.to(new Object(), animationTime * 0.05, { onComplete: function():void { // delay
 				TweenLite.to(whiteRect, animationTime * 0.9, { width: fullWidth, ease:Linear.easeIn, onComplete: function():void
 				{
 					TweenLite.to(textLayer, textDissolveTime, { alpha: 1.0, onComplete: IntroCompleted });			
@@ -74,18 +85,23 @@ package
 		
 		public function Hide():void
 		{
-				TweenLite.to(textLayer, textDissolveTime, {
-					alpha: 0.0, 
-					ease:Sine.easeOut, 
-					onComplete: function():void {
+			TweenLite.to(textLayer, textDissolveTime, {
+				alpha: 0.0, 
+				ease:Sine.easeOut, 
+				onComplete: function():void {
+					TweenLite.to(whiteRect, animationTime, { width: 0.0, x: whiteRect.width, ease:Linear.easeOut, onComplete: function():void 
+					{
 						dispatchEvent(new Event(FINISHED));
-					}
-				});			
+					}});
+				}
+			});			
 		}
 
 		private function IntroCompleted():void
 		{
-			TweenLite.to(this, 2.0, { onComplete: Hide });
+			removeChild(lightBlueRect);
+			removeChild(darkBlueRect);
+			TweenLite.to(new Object(), displayTime, { onComplete: Hide });
 		}
 
 		
@@ -101,7 +117,7 @@ package
 			
 			tf.filters =  filters;
 			
-			tf.defaultTextFormat = new TextFormat("Lato", size, 0x1A589B, bold);
+			tf.defaultTextFormat = new TextFormat("TVP", size, 0x1A589B, bold);
 			tf.text = text;
 			return tf;
 		}
