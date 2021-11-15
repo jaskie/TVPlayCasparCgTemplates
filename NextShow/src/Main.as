@@ -1,6 +1,5 @@
 package 
 {
-	import Ticker;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.filters.DropShadowFilter;
@@ -60,11 +59,12 @@ package
 		[Embed(source="../assets/TVPB-Bold.ttf", fontFamily="TVP", fontWeight = FontWeight.BOLD, fontStyle="regular", embedAsCFF = "false")]
 		private var _fontTvpBold:Class;
 
-		private const positionX:Number = 900; // counting from right side, in 1024 px scale
-		private const positionY:Number = 60; //from top
+		private const positionX:Number = 817; // counting from right side, in 1024 px scale
+		private const positionY:Number = 47; //from top
 		
 		private var first:Ticker;
 		private var second:Ticker;
+		private var double:DoubleTicker;
 		
 		public function Main():void 
 		{
@@ -88,10 +88,10 @@ package
 				graphics.endFill();
 				SetData(new XML(
 				<templateData>
-					<componentData id="first">
-						<data id="text" value="KRONIKA"></data> 
+					<componentData id="title1">
+						<data id="text" value="KRONIKA OBRAZ DNIA"></data> 
 					</componentData>
-					<componentData id="second">
+					<componentData id="title2">
 						<data id="text" value="WOKÓŁ NAS"></data> 
 					</componentData>
 				</templateData>
@@ -102,6 +102,8 @@ package
 		}
 		
 		public override function SetData(xmlData:XML) : void {
+			var title1: String;
+			var title2: String;
 			for each (var element:XML in xmlData.children()) {
 				if (element.@id == "first" && element.data.@value != "")
 				{
@@ -115,6 +117,31 @@ package
 					second.x = positionX - second.width;
 					second.y = positionY;
 				}
+				if (element.@id == "title1" && element.data.@value != "")
+					title1 = element.data.@value;
+				if (element.@id == "title2" && element.data.@value != "")
+					title2 = element.data.@value;
+			}
+			if (title1 || title2)
+			{
+				if (title1 && title2)
+				{
+					double = new DoubleTicker("ZA CHWILĘ", title1, "NASTĘPNIE", title2);
+					double.x = positionX - double.width;
+					double.y = positionY;
+				}
+				else if (title1)
+				{
+					first = new Ticker("ZA CHWILĘ", title1);
+					first.x = positionX - first.width;
+					first.y = positionY;
+				}
+				else if (title2)
+				{
+					first = new Ticker("ZA CHWILĘ", title2);
+					first.x = positionX - first.width;
+					first.y = positionY;
+				}					
 			}
 		}
 		
@@ -125,6 +152,12 @@ package
 				addChild(first);
 				first.addEventListener(Ticker.FINISHED, TickerFinished);
 				first.Show();
+			}
+			else if (double)
+			{
+				addChild(double);
+				double.addEventListener(DoubleTicker.FINISHED, TickerFinished);
+				double.Show();
 			}
 		}	
 		
@@ -151,12 +184,23 @@ package
 
 		private function Hide():void
 		{
-			if (first || second)
+			if (first || second || double)
 			{
-				first.Hide();
-				first = null;
-				second.Hide();
-				second = null;
+				if (first)
+				{
+					first.Hide();
+					first = null;
+				}
+				if (second)
+				{
+					second.Hide();
+					second = null;
+				}
+				if (double)
+				{
+					double.Hide();
+					double = null;
+				}
 			}			
 			else
 				Exit();
@@ -165,12 +209,11 @@ package
 		private function TickerFinished(event:Event):void
 		{
 			event.currentTarget.removeEventListener(event.type, arguments.callee);
-			if (first)
+			if (first && second)
 			{
 				removeChild(first);
 				first = null;
-				if (second)
-					TweenLite.to(new Object(), 2.0, { onComplete: PlaySecond });
+				TweenLite.to(new Object(), 2.0, { onComplete: PlaySecond });
 			}
 			else
 				Exit();			

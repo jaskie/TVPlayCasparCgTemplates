@@ -19,9 +19,12 @@ package
 		public static const FINISHED:String = "Finished";
 
 		private const textDissolveTime:Number = 0.2;
-		private const animationTime:Number = 0.7;
+		private const animationTime:Number = 1.2;
 		private const displayTime:Number = 3.0;
 		private const textMargin:Number = 10;
+		private const headerFontSize:int = 14;
+		private const titleFontSize:int = 18;
+
 
 		private var textLayer:Sprite = new Sprite();
 		private var whiteRect:Shape = new Shape();
@@ -32,12 +35,12 @@ package
 		
 		public function Ticker(header:String, title:String) 
 		{
-			var headerField:TextField = AddTextField(header, 25, false);
+			var headerField:TextField = AddTextField(header, headerFontSize, false);
 			headerField.x = textMargin;
 			textLayer.addChild(headerField);
-			var titleField:TextField = AddTextField(title, 35, true);
+			var titleField:TextField = AddTextField(title, titleFontSize, true);
 			titleField.x = textMargin;
-			titleField.y = headerField.height;
+			titleField.y = headerField.height - 8;
 			textLayer.addChild(titleField);
 			textLayer.alpha = 0;
 			fullWidth = textLayer.width + 4 * textMargin;
@@ -67,15 +70,15 @@ package
 		
 		public function Show():void
 		{
-			TweenLite.to(lightBlueRect, animationTime * 0.5, { width: fullWidth, ease:Linear.easeIn } );
+			TweenLite.to(lightBlueRect, animationTime * 0.5, { width: fullWidth, ease:Sine.easeIn } );
 			
 			TweenLite.to(new Object(), animationTime * 0.05, { onComplete: function():void // delay
 			{
-				TweenLite.to(darkBlueRect, animationTime * 0.5, { width: fullWidth, ease:Linear.easeIn } );
+				TweenLite.to(darkBlueRect, animationTime * 0.55, { width: fullWidth, ease:Sine.easeIn } );
 			}});
 			
 			TweenLite.to(new Object(), animationTime * 0.05, { onComplete: function():void { // delay
-				TweenLite.to(whiteRect, animationTime * 0.9, { width: fullWidth, ease:Linear.easeIn, onComplete: function():void
+				TweenLite.to(whiteRect, animationTime * 0.7, { width: fullWidth, ease:Sine.easeIn, onComplete: function():void
 				{
 					TweenLite.to(textLayer, textDissolveTime, { alpha: 1.0, onComplete: IntroCompleted });			
 				} 			
@@ -89,7 +92,7 @@ package
 				alpha: 0.0, 
 				ease:Sine.easeOut, 
 				onComplete: function():void {
-					TweenLite.to(whiteRect, animationTime, { width: 0.0, x: whiteRect.width, ease:Linear.easeOut, onComplete: function():void 
+					TweenLite.to(whiteRect, animationTime * 0.7, { width: 0.0, x: whiteRect.width, ease:Linear.easeOut, onComplete: function():void 
 					{
 						dispatchEvent(new Event(FINISHED));
 					}});
