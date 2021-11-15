@@ -16,7 +16,7 @@ package
 
 	
 	
-	[SWF(width=1024,height=576, frameRate="50")]
+	[SWF(width=1024,height=576, frameRate=50)]
 	public class Main extends CasparTemplate
 	{		
 		//Embed the fonts, important to set the embedAsCFF to false!
@@ -59,7 +59,7 @@ package
 		[Embed(source="../assets/TVPB-Bold.ttf", fontFamily="TVP", fontWeight = FontWeight.BOLD, fontStyle="regular", embedAsCFF = "false")]
 		private var _fontTvpBold:Class;
 
-		private const positionX:Number = 817; // counting from right side, in 1024 px scale
+		private const positionX:Number = 810; // counting from right side, in 1024 px scale
 		private const positionY:Number = 47; //from top
 		
 		private var first:Ticker;
@@ -216,17 +216,19 @@ package
 				TweenLite.to(new Object(), 2.0, { onComplete: PlaySecond });
 			}
 			else
-				Exit();			
+				Exit();
 		}		
 		
 		private function Exit():void
 		{
+			TweenLite.to(new Object(), 1.0, { onComplete: function():void { // wait one second before unloading as it consumes too much CPU
 			CONFIG::debug {
 				System.exit(0);
 			}
 			CONFIG::release {
 				removeTemplate();
 			}
+			}});
 		}
 		
 		

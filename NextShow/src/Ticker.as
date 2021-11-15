@@ -111,12 +111,12 @@ package
 		private function AddTextField(text:String, size:int, bold:Boolean, filters:Array = null) :TextField
 		{
 			var tf:TextField = new TextField(); 
-			tf.antiAliasType = AntiAliasType.ADVANCED;
+			tf.antiAliasType = AntiAliasType.NORMAL;
 			tf.autoSize = TextFieldAutoSize.RIGHT;
 			tf.embedFonts = true;
 			tf.multiline = false;
 			
-			tf.gridFitType = GridFitType.NONE;
+			tf.gridFitType = GridFitType.SUBPIXEL;
 			
 			tf.filters =  filters;
 			

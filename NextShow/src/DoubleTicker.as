@@ -35,8 +35,9 @@ package
 		
 		public function DoubleTicker(header1:String, title1:String, header2:String, title2:String ) 
 		{
-			var header1Field:TextField = AddTextField(header1, headerFontSize, false);
-			header1Field.x = textMargin;
+			var header1Field:TextField = AddTextField(header1, headerFontSize, true);
+			header1Field.scaleX = 0.8;
+			header1Field.x = textMargin + 1.5;
 			text1Layer.addChild(header1Field);
 			var title1Field:TextField = AddTextField(title1, titleFontSize, true);
 			title1Field.x = textMargin;
@@ -44,8 +45,9 @@ package
 			text1Layer.addChild(title1Field);
 			text1Layer.alpha = 0;
 
-			var header2Field:TextField = AddTextField(header2, headerFontSize, false);
-			header2Field.x = textMargin;
+			var header2Field:TextField = AddTextField(header2, headerFontSize, true);
+			header2Field.x = textMargin + 1.5;
+			header2Field.scaleX = 0.8;
 			text2Layer.addChild(header2Field);
 			var title2Field:TextField = AddTextField(title2, titleFontSize, true);
 			title2Field.x = textMargin;
@@ -157,12 +159,12 @@ package
 		private function AddTextField(text:String, size:int, bold:Boolean, filters:Array = null) :TextField
 		{
 			var tf:TextField = new TextField(); 
-			tf.antiAliasType = AntiAliasType.ADVANCED;
-			tf.autoSize = TextFieldAutoSize.RIGHT;
+			tf.antiAliasType = AntiAliasType.NORMAL;
+			tf.autoSize = TextFieldAutoSize.LEFT;
 			tf.embedFonts = true;
 			tf.multiline = false;
 			
-			tf.gridFitType = GridFitType.NONE;
+			tf.gridFitType = GridFitType.PIXEL;
 			
 			tf.filters =  filters;
 			
